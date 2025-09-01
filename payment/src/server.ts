@@ -1,8 +1,19 @@
 import express,{NextFunction, Request, Response} from 'express'
+import cors from 'cors'
+import dotenv from 'dotenv'
 
+dotenv.config()
 
 const app = express()
 app.use(express.json())
+
+const allowedOrigins = ['http://localhost:3000']
+if(process.env.NODE_ENV === 'dev'){
+    app.use(cors({
+        credentials:true,
+        origin:allowedOrigins
+    }))
+}
 
 app.post('/payment-service', async (req, res) => {
     const {cart} = req.body
