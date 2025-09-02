@@ -1,6 +1,9 @@
 import express,{NextFunction, Request, Response} from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
+import { Kafka } from "kafkajs";
+
+
 
 dotenv.config()
 
@@ -14,6 +17,21 @@ if(process.env.NODE_ENV === 'dev'){
         origin:allowedOrigins
     }))
 }
+const kafka = new Kafka({
+    clientId:"payment-service",
+    brokers: ["localhost:9094"]
+})
+
+const producer = kafka.producer();
+
+const connectToKafka = async () => {
+    try {
+        await producer.connect();
+        console.log('Producer connected');
+    } catch (error) {
+        console.error('Error connecting to kafka',error)
+    }
+}
 
 app.post('/payment-service', async (req, res) => {
     const {cart} = req.body
@@ -23,6 +41,10 @@ app.post('/payment-service', async (req, res) => {
     console.log('API endpoint Hit')
 
     // KAFKA
+    await producer.send({
+        topic: 'payment-successful',
+        messages: [{value: JSON.stringify({userId,cart})}]
+    })
 
     return res.send("Payment successful")
 })
@@ -32,5 +54,6 @@ app.use((err:any,req:Request, res:Response, next:NextFunction) => {
 })
 
 app.listen(8000,() => {
+    connectToKafka()
     console.log('Payment service is running on port 8000')
 })
