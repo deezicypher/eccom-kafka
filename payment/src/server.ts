@@ -19,7 +19,7 @@ if(process.env.NODE_ENV === 'dev'){
 }
 const kafka = new Kafka({
     clientId:"payment-service",
-    brokers: ["localhost:9094"]
+    brokers: ["localhost:9094","localhost:9095", "localhost:9096"]
 })
 
 const producer = kafka.producer();
@@ -38,12 +38,12 @@ app.post('/payment-service', async (req, res) => {
     const userId = '1'
 
     // TODO PAYMENT
-    console.log('API endpoint Hit')
+    console.log('Payment successful')
 
     // KAFKA
     await producer.send({
         topic: 'payment-successful',
-        messages: [{value: JSON.stringify({userId,cart})}]
+        messages: [{key:userId, value: JSON.stringify({userId,cart})}]
     })
 
     return res.send("Payment successful")
